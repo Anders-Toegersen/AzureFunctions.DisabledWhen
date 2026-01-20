@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AzureFunctions.DisabledWhen\AzureFunctions.DisabledWhen.csproj" />
+    <ProjectReference Include="..\AzureFunctions.DisabledWhen.TestHost\AzureFunctions.DisabledWhen.TestHost.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="1.9.64" />
+  </ItemGroup>
+
+</Project>
