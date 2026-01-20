@@ -100,12 +100,12 @@ csharp_style_prefer_readonly_struct = true:suggestion
 csharp_style_prefer_readonly_struct_member = true:suggestion
 
 # Code-block preferences
-csharp_prefer_braces = true:suggestion
-csharp_prefer_simple_using_statement = true:suggestion
+csharp_prefer_braces = true:warning
+csharp_prefer_simple_using_statement = true:warning
 csharp_style_namespace_declarations = file_scoped:warning
-csharp_style_prefer_method_group_conversion = true:suggestion
+csharp_style_prefer_method_group_conversion = false:suggestion
 csharp_style_prefer_top_level_statements = true:suggestion
-csharp_style_prefer_primary_constructors = true:suggestion
+csharp_style_prefer_primary_constructors = false:suggestion
 
 # Expression-level preferences
 csharp_style_deconstructed_variable_declaration = true:suggestion
@@ -189,7 +189,7 @@ dotnet_naming_rule.constant_should_be_pascal_case.severity = warning
 dotnet_naming_rule.constant_should_be_pascal_case.symbols = constant
 dotnet_naming_rule.constant_should_be_pascal_case.style = pascal_case
 
-dotnet_naming_rule.async_methods_should_end_with_async.severity = suggestion
+dotnet_naming_rule.async_methods_should_end_with_async.severity = none
 dotnet_naming_rule.async_methods_should_end_with_async.symbols = async_methods
 dotnet_naming_rule.async_methods_should_end_with_async.style = end_with_async
 
@@ -226,3 +226,5 @@ dotnet_naming_style.end_with_async.capitalization = pascal_case
 # Diagonistics preferences
 dotnet_diagnostic.IDE0008.severity = none                           # IDE0130: Namespace does not match folder structure
 dotnet_diagnostic.IDE0290.severity = none                           # IDE0290: Use primary constructor
+dotnet_diagnostic.IDE0046.severity = none                           # IDE0046: Convert to conditional expression
+dotnet_diagnostic.IDE0021.severity = none                           # IDE0021: Use block body for constructor

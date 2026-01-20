@@ -8,8 +8,14 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/AzureFunctions.DisabledWhen.Core/AzureFunctions.DisabledWhen.Core.csproj" />
-    <Project Path="src/AzureFunctions.DisabledWhen.Reflection/AzureFunctions.DisabledWhen.Reflection.csproj" />
+    <Project Path="src/AzureFunctions.DisabledWhen/AzureFunctions.DisabledWhen.csproj" />
     <Project Path="src/AzureFunctions.DisabledWhen.SourceGenerator/AzureFunctions.DisabledWhen.SourceGenerator.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/.editorconfig" />
+    <File Path="tests/Directory.Build.props" />
+    <Project Path="tests/AzureFunctions.DisabledWhen.Tests/AzureFunctions.DisabledWhen.Tests.csproj" />
+    <Project Path="tests/AzureFunctions.DisabledWhen.SourceGenerator.Tests/AzureFunctions.DisabledWhen.SourceGenerator.Tests.csproj" />
+    <Project Path="tests/AzureFunctions.DisabledWhen.TestHost/AzureFunctions.DisabledWhen.TestHost.csproj" />
   </Folder>
 </Solution>

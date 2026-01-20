@@ -6,35 +6,50 @@ Conditionally disable Azure Functions based on configuration values using attrib
 
 | Package | Description |
 |---------|-------------|
-| `AzureFunctions.DisabledWhen.Reflection` | Reflection-based implementation |
-| `AzureFunctions.DisabledWhen.SourceGenerator` | Source-generated implementation |
+| `AzureFunctions.DisabledWhen` | Reflection-based implementation |
+| `AzureFunctions.DisabledWhen.SourceGenerator` | Source-generated implementation (AOT-compatible) |
 
 ## Installation
 
 ```bash
 # Reflection-based
-dotnet add package AzureFunctions.DisabledWhen.Reflection
+dotnet add package AzureFunctions.DisabledWhen
 
-# Source-generated
+# Source-generated (requires additional setup)
+dotnet add package AzureFunctions.DisabledWhen
 dotnet add package AzureFunctions.DisabledWhen.SourceGenerator
 ```
+
+### Source Generator Setup
+
+When using the SourceGenerator, add this to your `.csproj`:
+
+```xml
+<PropertyGroup>
+  <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);AzureFunctions.DisabledWhen</InterceptorsPreviewNamespaces>
+</PropertyGroup>
+```
+
+> **Note:** The source generator only discovers functions in the same assembly where `UseDisabledWhen()` is called. If your functions are spread across multiple assemblies, use the reflection-based package instead.
 
 ## Usage
 
 ### 1. Register the metadata provider
 
-In your `Program.cs`, call `UseDisabledWhen()` on the host builder after `ConfigureFunctionsWebApplication()`:
+In your `Program.cs`, call `UseDisabledWhen()` on the host builder **after** `ConfigureFunctionsWebApplication()`:
 
 ```csharp
 using AzureFunctions.DisabledWhen;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
-    .UseDisabledWhen()
+    .UseDisabledWhen() // Must be called after ConfigureFunctionsWebApplication
     .Build();
 
 host.Run();
 ```
+
+> **Important:** `UseDisabledWhen()` must be called after `ConfigureFunctionsWebApplication()` (or `ConfigureFunctionsWorkerDefaults()`) to ensure the default function metadata provider is registered first.
 
 ### 2. Apply attributes to functions
 
@@ -43,28 +58,22 @@ using AzureFunctions.DisabledWhen;
 
 public class MyFunctions
 {
-    // Disable in Development environment
     [DisabledWhenLocal]
     [Function("MyScheduledFunction")]
     public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo timer)
     {
-        // ...
     }
 
-    // Disable when config matches a value
     [DisabledWhen("FeatureFlags:DisableThis", "true")]
     [Function("FeatureFlaggedFunction")]
     public async Task RunFlagged([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
     {
-        // ...
     }
 
-    // Disable when config is missing or empty
     [DisabledWhenNullOrEmpty("ExternalService:ApiKey")]
     [Function("RequiresApiKey")]
     public async Task RunWithKey([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
     {
-        // ...
     }
 }
 ```
@@ -101,6 +110,8 @@ Disables a function when a configuration key is missing, null, or empty.
 ## How It Works
 
 The library provides a custom `IFunctionMetadataProvider` that evaluates attribute conditions at startup and excludes disabled functions from registration.
+
+When using both packages, the SourceGenerator intercepts calls to `UseDisabledWhen()` and replaces the reflection-based implementation with a compile-time generated version that is AOT-compatible.
 
 Since filtering happens at startup:
 * Configuration changes require a restart to take effect
