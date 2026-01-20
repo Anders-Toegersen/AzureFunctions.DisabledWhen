@@ -11,7 +11,7 @@
   <!-- NuGet Package -->
   <PropertyGroup>
     <PackageId>AzureFunctions.DisabledWhen.SourceGenerator</PackageId>
-    <Description>Source generator for conditionally disabling Azure Functions.</Description>
+    <Description>Conditionally disable Azure Functions based on configuration values using attributes and source generation.</Description>
     <PackageTags>Azure;Functions;Disable</PackageTags>
   </PropertyGroup>
 

@@ -1,5 +1,3 @@
-using AzureFunctions.DisabledWhen.TestHost;
-
 namespace AzureFunctions.DisabledWhen.SourceGenerator.Tests;
 
 public class HostStartupTests

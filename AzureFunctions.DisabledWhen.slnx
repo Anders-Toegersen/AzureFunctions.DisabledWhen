@@ -1,17 +1,18 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/AzureFunctions.DisabledWhen/AzureFunctions.DisabledWhen.csproj" />
     <Project Path="src/AzureFunctions.DisabledWhen.SourceGenerator/AzureFunctions.DisabledWhen.SourceGenerator.csproj" />
+    <Project Path="src/AzureFunctions.DisabledWhen/AzureFunctions.DisabledWhen.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <File Path="tests/.editorconfig" />
     <File Path="tests/Directory.Build.props" />
-    <Project Path="tests/AzureFunctions.DisabledWhen.Tests/AzureFunctions.DisabledWhen.Tests.csproj" />
     <Project Path="tests/AzureFunctions.DisabledWhen.SourceGenerator.Tests/AzureFunctions.DisabledWhen.SourceGenerator.Tests.csproj" />
-    <Project Path="tests/AzureFunctions.DisabledWhen.TestHost/AzureFunctions.DisabledWhen.TestHost.csproj" />
+    <Project Path="tests/AzureFunctions.DisabledWhen.Tests/AzureFunctions.DisabledWhen.Tests.csproj" />
   </Folder>
   <Folder Name="/root/">
     <File Path=".editorconfig" />
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/release.yml" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="global.json" />
@@ -19,7 +20,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/sample/">
-    <Project Path="sample/SampleFunctionApp/SampleFunctionApp.csproj" />
     <Project Path="sample/SampleFunctionApp.SourceGenerated/SampleFunctionApp.SourceGenerated.csproj" />
+    <Project Path="sample/SampleFunctionApp/SampleFunctionApp.csproj" />
   </Folder>
 </Solution>

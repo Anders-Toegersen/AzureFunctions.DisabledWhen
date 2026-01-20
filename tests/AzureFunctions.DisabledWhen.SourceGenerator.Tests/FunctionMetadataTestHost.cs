@@ -1,9 +1,10 @@
 using Microsoft.Azure.Functions.Worker.Core.FunctionMetadata;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
-namespace AzureFunctions.DisabledWhen.TestHost;
+namespace AzureFunctions.DisabledWhen.SourceGenerator.Tests;
 
 public sealed class FunctionMetadataTestHost : IAsyncDisposable
 {
@@ -23,11 +24,15 @@ public sealed class FunctionMetadataTestHost : IAsyncDisposable
     {
         var builder = new HostBuilder()
             .ConfigureFunctionsWorkerDefaults()
-            .RemoveWorkerHostedService()
             .ConfigureAppConfiguration(config =>
             {
                 config.SetBasePath(AppContext.BaseDirectory);
                 config.AddInMemoryCollection(configuration ?? []);
+            })
+            .ConfigureServices(services =>
+            {
+                // Removes WorkerHostedService to prevent gRPC errors in tests (no real Azure Functions host)
+                services.RemoveAll<IHostedService>();
             });
 
         configureTestHost(builder);
@@ -54,6 +59,11 @@ public sealed class FunctionMetadataTestHost : IAsyncDisposable
             .GetFunctionMetadataAsync(AppContext.BaseDirectory);
     }
 
+    /// <summary>
+    /// Retrieves the name of the function metadata provider.
+    /// </summary>
+    /// <returns>The name of the function metadata provider.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the host has not been started.</exception>
     public string GetMetadataProviderTypeName()
     {
         if (host is null)

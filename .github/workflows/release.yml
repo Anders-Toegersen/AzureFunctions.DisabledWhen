@@ -1,0 +1,82 @@
+name: Release to NuGet
+
+on:
+  push:
+    branches: [publish]
+  pull_request:
+    branches: [publish]
+  workflow_dispatch:
+
+jobs:
+  check-version:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR version
+        id: pr_version
+        run: |
+          PREFIX=$(grep -oP '(?<=<VersionPrefix>)[^<]+' Directory.Build.props)
+          SUFFIX=$(grep -oP '(?<=<VersionSuffix>)[^<]+' Directory.Build.props || echo "")
+          if [ -n "$SUFFIX" ]; then
+            echo "version=$PREFIX-$SUFFIX" >> $GITHUB_OUTPUT
+          else
+            echo "version=$PREFIX" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get base version
+        id: base_version
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git show origin/${{ github.base_ref }}:Directory.Build.props > base.props
+          PREFIX=$(grep -oP '(?<=<VersionPrefix>)[^<]+' base.props || echo "")
+          SUFFIX=$(grep -oP '(?<=<VersionSuffix>)[^<]+' base.props || echo "")
+          if [ -n "$SUFFIX" ]; then
+            echo "version=$PREFIX-$SUFFIX" >> $GITHUB_OUTPUT
+          else
+            echo "version=$PREFIX" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check version changed
+        run: |
+          echo "PR version: ${{ steps.pr_version.outputs.version }}"
+          echo "Base version: ${{ steps.base_version.outputs.version }}"
+          if [ "${{ steps.pr_version.outputs.version }}" == "${{ steps.base_version.outputs.version }}" ]; then
+            echo "::error::Version must be changed in Directory.Build.props before merging to publish branch"
+            exit 1
+          fi
+          echo "Version changed from ${{ steps.base_version.outputs.version }} to ${{ steps.pr_version.outputs.version }}"
+
+  release:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --test-modules "**/bin/Release/**/*.Tests.dll"
+
+      - name: Pack
+        run: dotnet pack --configuration Release --no-build -o ./nupkg
+
+      - name: Push to NuGet
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
