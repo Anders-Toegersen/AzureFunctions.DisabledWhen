@@ -1,0 +1,27 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+  </PropertyGroup>
+
+  <!-- NuGet Package -->
+  <PropertyGroup>
+    <PackageId>AzureFunctions.DisabledWhen.SourceGenerator</PackageId>
+    <VersionPrefix>1.0.0</VersionPrefix>
+	<VersionSuffix>alpha</VersionSuffix>
+    <Description>Source generator for conditionally disabling Azure Functions. AOT-compatible alternative to AzureFunctions.DisabledWhen.Reflection.</Description>
+    <PackageTags>azure;functions;source-generator;aot</PackageTags>
+  </PropertyGroup>
+
+  <!-- Analyzer packaging -->
+  <PropertyGroup>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeSymbols>false</IncludeSymbols>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddPackageFiles</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+</Project>
