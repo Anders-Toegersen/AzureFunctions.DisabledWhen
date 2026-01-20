@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using AzureFunctions.DisabledWhen.SourceGenerator.Internal;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AzureFunctions.DisabledWhen.SourceGenerator;
@@ -8,57 +9,113 @@ namespace AzureFunctions.DisabledWhen.SourceGenerator;
 [Generator]
 public sealed class DisabledWhenGenerator : IIncrementalGenerator
 {
-    private const string DisabledWhenAttribute = "AzureFunctions.DisabledWhen.DisabledWhenAttribute";
-    private const string DisabledWhenLocalAttribute = "AzureFunctions.DisabledWhen.DisabledWhenLocalAttribute";
-    private const string DisabledWhenNullOrEmptyAttribute = "AzureFunctions.DisabledWhen.DisabledWhenNullOrEmptyAttribute";
+    private const string DisabledWhenAttributeName = "AzureFunctions.DisabledWhen.DisabledWhenAttribute";
+    private const string DisabledWhenLocalAttributeName = "AzureFunctions.DisabledWhen.DisabledWhenLocalAttribute";
+    private const string DisabledWhenNullOrEmptyAttributeName = "AzureFunctions.DisabledWhen.DisabledWhenNullOrEmptyAttribute";
+    private const string UseDisabledWhenMethodName = "AzureFunctions.DisabledWhen.IHostBuilderExtensions.UseDisabledWhen";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var disabledWhen = context.SyntaxProvider
+        var disabledWhenAttributes = context.SyntaxProvider
             .ForAttributeWithMetadataName(
-                DisabledWhenAttribute,
+                DisabledWhenAttributeName,
                 predicate: static (node, _) => node is MethodDeclarationSyntax,
-                transform: static (ctx, ct) => ExtractFromDisabledWhen(ctx, ct))
+                transform: static (ctx, ct) => ExtractDisabledWhenInfo(ctx, ct))
             .Where(static info => info.HasValue)
-            .Select(static (info, _) => info!.Value);
+            .Select(static (info, _) => info!.Value)
+            .Collect();
 
-        var disabledWhenLocal = context.SyntaxProvider
+        var disabledWhenLocalAttributes = context.SyntaxProvider
             .ForAttributeWithMetadataName(
-                DisabledWhenLocalAttribute,
+                DisabledWhenLocalAttributeName,
                 predicate: static (node, _) => node is MethodDeclarationSyntax,
-                transform: static (ctx, ct) => ExtractFromDisabledWhenLocal(ctx, ct))
+                transform: static (ctx, ct) => ExtractDisabledWhenLocalInfo(ctx, ct))
             .Where(static info => info.HasValue)
-            .Select(static (info, _) => info!.Value);
+            .Select(static (info, _) => info!.Value)
+            .Collect();
 
-        var disabledWhenNullOrEmpty = context.SyntaxProvider
+        var disabledWhenNullOrEmptyAttributes = context.SyntaxProvider
             .ForAttributeWithMetadataName(
-                DisabledWhenNullOrEmptyAttribute,
+                DisabledWhenNullOrEmptyAttributeName,
                 predicate: static (node, _) => node is MethodDeclarationSyntax,
-                transform: static (ctx, ct) => ExtractFromDisabledWhenNullOrEmpty(ctx, ct))
+                transform: static (ctx, ct) => ExtractDisabledWhenNullOrEmptyInfo(ctx, ct))
             .Where(static info => info.HasValue)
-            .Select(static (info, _) => info!.Value);
+            .Select(static (info, _) => info!.Value)
+            .Collect();
 
-        var combined = disabledWhen.Collect()
-            .Combine(disabledWhenLocal.Collect())
-            .Combine(disabledWhenNullOrEmpty.Collect())
+        var interceptors = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (node, _) => node is InvocationExpressionSyntax invocation &&
+                    invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
+                    memberAccess.Name.Identifier.Text == "UseDisabledWhen",
+                transform: static (ctx, ct) => ExtractInterceptorInfo(ctx, ct))
+            .Where(static info => info.HasValue)
+            .Select(static (info, _) => info!.Value)
+            .Collect();
+
+        var functions = disabledWhenAttributes
+            .Combine(disabledWhenLocalAttributes)
+            .Combine(disabledWhenNullOrEmptyAttributes)
             .Select(static (tuple, _) =>
             {
                 var ((first, second), third) = tuple;
-                return first.AddRange(second).AddRange(third);
+                var builder = ImmutableArray.CreateBuilder<FunctionDisableInfo>(first.Length + second.Length + third.Length);
+
+                builder.AddRange(first);
+                builder.AddRange(second);
+                builder.AddRange(third);
+
+                return builder.MoveToImmutable();
             });
 
-        context.RegisterSourceOutput(combined, static (spc, functions) =>
+        var combined = functions.Combine(interceptors);
+
+        context.RegisterSourceOutput(combined, static (spc, data) =>
         {
-            if (functions.IsEmpty)
+            var (funcs, interceptorInfos) = data;
+
+            if (funcs.IsEmpty && interceptorInfos.IsEmpty)
             {
                 return;
             }
 
-            spc.AddSource("DisabledWhenRegistry.g.cs", Emitter.GenerateRegistry(functions));
+            spc.AddSource("DisabledWhenRegistry.g.cs", Emitter.GenerateRegistry(funcs, interceptorInfos));
         });
     }
 
-    private static FunctionDisableInfo? ExtractFromDisabledWhen(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
+    private static InterceptorInfo? ExtractInterceptorInfo(GeneratorSyntaxContext ctx, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        if (ctx.Node is not InvocationExpressionSyntax invocation)
+        {
+            return null;
+        }
+
+        var symbolInfo = ctx.SemanticModel.GetSymbolInfo(invocation, ct);
+        if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
+        {
+            return null;
+        }
+
+        var fullName = $"{methodSymbol.ContainingType.ToDisplayString()}.{methodSymbol.Name}";
+        if (fullName != UseDisabledWhenMethodName)
+        {
+            return null;
+        }
+
+#pragma warning disable RSEXPERIMENTAL002
+        var interceptableLocation = ctx.SemanticModel.GetInterceptableLocation(invocation, ct);
+#pragma warning restore RSEXPERIMENTAL002
+        if (interceptableLocation is null)
+        {
+            return null;
+        }
+
+        return new InterceptorInfo(interceptableLocation.Version, interceptableLocation.Data);
+    }
+
+    private static FunctionDisableInfo? ExtractDisabledWhenInfo(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -93,10 +150,11 @@ public sealed class DisabledWhenGenerator : IIncrementalGenerator
         }
 
         var entryPoint = GetFullyQualifiedMethodName(methodSymbol);
+
         return new FunctionDisableInfo(entryPoint, conditions.ToImmutable());
     }
 
-    private static FunctionDisableInfo? ExtractFromDisabledWhenLocal(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
+    private static FunctionDisableInfo? ExtractDisabledWhenLocalInfo(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -105,14 +163,13 @@ public sealed class DisabledWhenGenerator : IIncrementalGenerator
             return null;
         }
 
-        // DisabledWhenLocalAttribute has hardcoded values
         var condition = new DisabledCondition("AZURE_FUNCTIONS_ENVIRONMENT", "Development", StringComparison.Ordinal);
         var entryPoint = GetFullyQualifiedMethodName(methodSymbol);
 
-        return new FunctionDisableInfo(entryPoint, ImmutableArray.Create(condition));
+        return new FunctionDisableInfo(entryPoint, [condition]);
     }
 
-    private static FunctionDisableInfo? ExtractFromDisabledWhenNullOrEmpty(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
+    private static FunctionDisableInfo? ExtractDisabledWhenNullOrEmptyInfo(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -138,6 +195,7 @@ public sealed class DisabledWhenGenerator : IIncrementalGenerator
         }
 
         var entryPoint = GetFullyQualifiedMethodName(methodSymbol);
+
         return new FunctionDisableInfo(entryPoint, conditions.ToImmutable());
     }
 
@@ -147,6 +205,7 @@ public sealed class DisabledWhenGenerator : IIncrementalGenerator
         var typeFullName = containingType.ToDisplayString(
             new SymbolDisplayFormat(
                 typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces));
+
         return $"{typeFullName}.{method.Name}";
     }
 }

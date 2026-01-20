@@ -5,13 +5,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <!-- NuGet Package -->
   <PropertyGroup>
     <PackageId>AzureFunctions.DisabledWhen.SourceGenerator</PackageId>
-    <VersionPrefix>1.0.0</VersionPrefix>
-	<VersionSuffix>alpha</VersionSuffix>
     <Description>Source generator for conditionally disabling Azure Functions.</Description>
     <PackageTags>Azure;Functions;Disable</PackageTags>
   </PropertyGroup>
