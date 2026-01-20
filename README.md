@@ -7,28 +7,34 @@ Conditionally disable Azure Functions based on configuration values using attrib
 | Package | Description |
 |---------|-------------|
 | `AzureFunctions.DisabledWhen` | Reflection-based implementation |
-| `AzureFunctions.DisabledWhen.SourceGenerator` | Source-generated implementation (AOT-compatible) |
+| `AzureFunctions.DisabledWhen.SourceGenerator` | Source-generated implementation |
 
 ## Installation
 
-```bash
-# Reflection-based
-dotnet add package AzureFunctions.DisabledWhen
+### Reflection-based (simple setup)
 
-# Source-generated (requires additional setup)
+```bash
+dotnet add package AzureFunctions.DisabledWhen
+```
+
+See [`sample/SampleFunctionApp`](sample/SampleFunctionApp) for a working example.
+
+### Source-generated (AOT-compatible)
+
+```bash
 dotnet add package AzureFunctions.DisabledWhen
 dotnet add package AzureFunctions.DisabledWhen.SourceGenerator
 ```
 
-### Source Generator Setup
-
-When using the SourceGenerator, add this to your `.csproj`:
+Add this to your `.csproj` to enable interceptors:
 
 ```xml
 <PropertyGroup>
   <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);AzureFunctions.DisabledWhen</InterceptorsPreviewNamespaces>
 </PropertyGroup>
 ```
+
+See [`sample/SampleFunctionApp.SourceGenerated`](sample/SampleFunctionApp.SourceGenerated) for a working example.
 
 > **Note:** The source generator only discovers functions in the same assembly where `UseDisabledWhen()` is called. If your functions are spread across multiple assemblies, use the reflection-based package instead.
 
@@ -58,21 +64,27 @@ using AzureFunctions.DisabledWhen;
 
 public class MyFunctions
 {
+    [Function("ScheduledCleanup")]
     [DisabledWhenLocal]
-    [Function("MyScheduledFunction")]
-    public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo timer)
+    public static void ScheduledCleanup(
+        [TimerTrigger("0 */5 * * * *", RunOnStartup = true)] TimerInfo timer)
     {
     }
 
-    [DisabledWhen("FeatureFlags:DisableThis", "true")]
-    [Function("FeatureFlaggedFunction")]
-    public async Task RunFlagged([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+    [Function("ProcessOrderQueue")]
+    [DisabledWhenNullOrEmpty("ServiceBusConnection")]
+    public static void ProcessOrderQueue(
+        [ServiceBusTrigger("orders", Connection = "ServiceBusConnection")] string message)
     {
     }
 
-    [DisabledWhenNullOrEmpty("ExternalService:ApiKey")]
-    [Function("RequiresApiKey")]
-    public async Task RunWithKey([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
+    [Function("GdprDataExport")]
+    [DisabledWhen("EnvironmentOptions:RegionAbbreviation", "US", StringComparison.OrdinalIgnoreCase)]
+    [DisabledWhen("EnvironmentOptions:RegionAbbreviation", "CA", StringComparison.OrdinalIgnoreCase)]
+    [DisabledWhen("EnvironmentOptions:RegionAbbreviation", "AU", StringComparison.OrdinalIgnoreCase)]
+    public static IActionResult GdprDataExport(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "gdpr/export/{userId}")] HttpRequest req,
+        string userId)
     {
     }
 }
@@ -109,7 +121,7 @@ Disables a function when a configuration key is missing, null, or empty.
 
 ## How It Works
 
-The library provides a custom `IFunctionMetadataProvider` that evaluates attribute conditions at startup and excludes disabled functions from registration.
+The library provides a custom `IFunctionMetadataProvider` that evaluates attribute conditions at startup and excludes disabled functions from registration. The approach is inspired from this [github issue](https://github.com/Azure/azure-functions-dotnet-worker/issues/1398#issuecomment-2144149276).
 
 When using both packages, the SourceGenerator intercepts calls to `UseDisabledWhen()` and replaces the reflection-based implementation with a compile-time generated version that is AOT-compatible.
 
