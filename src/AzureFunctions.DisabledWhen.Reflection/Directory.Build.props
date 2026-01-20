@@ -1,0 +1,17 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <!-- NuGet Package -->
+  <PropertyGroup>
+    <PackageId>AzureFunctions.DisabledWhen.Reflection</PackageId>
+    <VersionPrefix>1.0.0</VersionPrefix>
+	<VersionSuffix>alpha</VersionSuffix>
+    <Description>Conditionally disable Azure Functions based on configuration values using attributes. Reflection-based implementation.</Description>
+    <PackageTags>azure;functions;azure-functions;disable;configuration;attributes</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+</Project>

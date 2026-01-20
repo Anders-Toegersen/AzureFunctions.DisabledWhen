@@ -1,0 +1,16 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- NuGet Package -->
+  <PropertyGroup>
+    <PackageId>AzureFunctions.DisabledWhen.Core</PackageId>
+    <VersionPrefix>1.0.0</VersionPrefix>
+	<VersionSuffix>alpha</VersionSuffix>
+    <Description>Core attributes for conditionally disabling Azure Functions. Used by AzureFunctions.DisabledWhen.Reflection and AzureFunctions.DisabledWhen.SourceGenerator.</Description>
+    <PackageTags>azure;functions;attributes</PackageTags>
+  </PropertyGroup>
+</Project>
