@@ -1,17 +1,12 @@
 # AzureFunctions.DisabledWhen
 
+![NuGet](https://img.shields.io/nuget/v/AzureFunctions.DisabledWhen?logo=nuget) ![License](https://img.shields.io/github/license/Anders-Toegersen/AzureFunctions.DisabledWhen)
+
 Conditionally disable Azure Functions based on configuration values using attributes.
-
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| `AzureFunctions.DisabledWhen` | Reflection-based implementation |
-| `AzureFunctions.DisabledWhen.SourceGenerator` | Source-generated implementation |
 
 ## Installation
 
-### Reflection-based (simple setup)
+### Simple setup
 
 ```bash
 dotnet add package AzureFunctions.DisabledWhen
@@ -19,7 +14,7 @@ dotnet add package AzureFunctions.DisabledWhen
 
 See [`sample/SampleFunctionApp`](sample/SampleFunctionApp) for a working example.
 
-### Source-generated (AOT-compatible)
+### Source generated setup
 
 ```bash
 dotnet add package AzureFunctions.DisabledWhen
