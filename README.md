@@ -37,14 +37,28 @@ See [`sample/SampleFunctionApp.SourceGenerated`](sample/SampleFunctionApp.Source
 
 ### 1. Register the metadata provider
 
-In your `Program.cs`, call `UseDisabledWhen()` on the host builder **after** `ConfigureFunctionsWebApplication()`:
+In your `Program.cs`, call `UseDisabledWhen()` on the builder **after** `ConfigureFunctionsWebApplication()`:
 
 ```csharp
 using AzureFunctions.DisabledWhen;
+using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Extensions.Hosting;
 
+var builder = FunctionsApplication.CreateBuilder(args);
+
+builder.ConfigureFunctionsWebApplication();
+builder.UseDisabledWhen();
+
+var host = builder.Build();
+host.Run();
+```
+
+The legacy `IHostBuilder` pattern is also supported:
+
+```csharp
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
-    .UseDisabledWhen() // Must be called after ConfigureFunctionsWebApplication
+    .UseDisabledWhen()
     .Build();
 
 host.Run();

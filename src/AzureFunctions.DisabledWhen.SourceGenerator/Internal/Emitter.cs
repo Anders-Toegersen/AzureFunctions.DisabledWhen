@@ -25,6 +25,7 @@ internal static class Emitter
             using Microsoft.Azure.Functions.Worker.Core.FunctionMetadata;
             using Microsoft.Extensions.Configuration;
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Azure.Functions.Worker;
             using Microsoft.Extensions.Hosting;
             using Microsoft.Extensions.Logging;
 
@@ -145,6 +146,9 @@ internal static class Emitter
             {{interceptorMethods}}
                     private static IHostBuilder UseDisabledWhenGenerated(this IHostBuilder builder)
                         => builder.ConfigureServices(services => services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>());
+
+                    private static void UseDisabledWhenGenerated(this IFunctionsWorkerApplicationBuilder builder)
+                        => builder.Services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>();
                 }
             }
             """;
@@ -164,12 +168,24 @@ internal static class Emitter
 
         foreach (var interceptor in interceptors.Distinct())
         {
-            sb.AppendLine($$"""
+            if (interceptor.BuilderType == BuilderType.FunctionsWorkerApplicationBuilder)
+            {
+                sb.AppendLine($$"""
+                        [global::System.Runtime.CompilerServices.InterceptsLocation({{interceptor.Version}}, "{{interceptor.Data}}")]
+                        public static void UseDisabledWhen_{{index}}(this IFunctionsWorkerApplicationBuilder builder)
+                            => builder.UseDisabledWhenGenerated();
+
+            """);
+            }
+            else
+            {
+                sb.AppendLine($$"""
                         [global::System.Runtime.CompilerServices.InterceptsLocation({{interceptor.Version}}, "{{interceptor.Data}}")]
                         public static IHostBuilder UseDisabledWhen_{{index}}(this IHostBuilder builder)
                             => builder.UseDisabledWhenGenerated();
 
             """);
+            }
             index++;
         }
 
