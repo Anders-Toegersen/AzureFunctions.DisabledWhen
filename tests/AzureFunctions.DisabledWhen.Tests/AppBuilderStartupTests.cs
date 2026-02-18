@@ -89,4 +89,5 @@ public class AppBuilderStartupTests
         await Assert.That(functionNames).Contains("AlwaysEnabled");
         await Assert.That(functionNames).DoesNotContain("RequiresApiKey");
     }
+
 }
