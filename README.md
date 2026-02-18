@@ -41,6 +41,7 @@ In your `Program.cs`, call `UseDisabledWhen()` on the builder **after** `Configu
 
 ```csharp
 using AzureFunctions.DisabledWhen;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Hosting;
 
