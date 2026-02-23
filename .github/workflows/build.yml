@@ -21,11 +21,8 @@ jobs:
             9.0.x
             10.0.x
 
-      - name: Restore
-        run: dotnet restore
-
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: for proj in src/*/*.csproj tests/*/*.csproj; do dotnet build "$proj" -c Release; done
 
       - name: Test
         run: dotnet test --test-modules "**/bin/Release/**/*.Tests.dll"

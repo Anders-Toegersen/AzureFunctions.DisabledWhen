@@ -66,17 +66,14 @@ jobs:
             9.0.x
             10.0.x
 
-      - name: Restore
-        run: dotnet restore
-
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: for proj in src/*/*.csproj tests/*/*.csproj; do dotnet build "$proj" -c Release; done
 
       - name: Test
         run: dotnet test --test-modules "**/bin/Release/**/*.Tests.dll"
 
       - name: Pack
-        run: dotnet pack --configuration Release --no-build -o ./nupkg
+        run: for proj in src/*/*.csproj; do dotnet pack "$proj" -c Release --no-build -o ./nupkg; done
 
       - name: Push to NuGet
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
