@@ -31,7 +31,7 @@ internal static class Emitter
 
             namespace System.Runtime.CompilerServices
             {
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = true)]
                 file sealed class InterceptsLocationAttribute : global::System.Attribute
                 {
@@ -41,7 +41,7 @@ internal static class Emitter
 
             namespace AzureFunctions.DisabledWhen
             {
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file readonly struct DisabledCondition
                 {
                     public DisabledCondition(string configKey, string? configValue, global::System.StringComparison comparer, bool matchNullOrEmpty = false)
@@ -58,7 +58,7 @@ internal static class Emitter
                     public bool MatchNullOrEmpty { get; }
                 }
 
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file static class DisabledWhenRegistry
                 {
                     private static readonly global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<DisabledCondition>> Conditions =
@@ -79,7 +79,7 @@ internal static class Emitter
                     }
                 }
 
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file sealed class GeneratedDisabledWhenMetadataProvider : IFunctionMetadataProvider
                 {
                     private readonly IServiceProvider serviceProvider;
@@ -141,7 +141,7 @@ internal static class Emitter
                     }
                 }
 
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file static class UseDisabledWhenInterceptor
                 {
             {{interceptorMethods}}

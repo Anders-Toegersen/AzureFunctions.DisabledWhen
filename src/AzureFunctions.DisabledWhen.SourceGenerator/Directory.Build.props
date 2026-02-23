@@ -13,7 +13,12 @@
     <PackageId>AzureFunctions.DisabledWhen.SourceGenerator</PackageId>
     <Description>Conditionally disable Azure Functions based on configuration values using attributes and source generation.</Description>
     <PackageTags>Azure;Functions;Disable</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
   <!-- Analyzer packaging -->
   <PropertyGroup>
