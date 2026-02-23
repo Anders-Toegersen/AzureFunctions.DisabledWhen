@@ -1,3 +1,6 @@
+using Microsoft.Azure.Functions.Worker.Core.FunctionMetadata;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace AzureFunctions.DisabledWhen.SourceGenerator.Tests;
 
 public class HostStartupTests
@@ -277,5 +280,30 @@ public class HostStartupTests
 
         await Assert.That(functionNames).Contains("NestedConfigDisabled");
         await Assert.That(functionNames).DoesNotContain("NestedConfigRequired");
+    }
+
+    [Test]
+    public async Task Host_Throws_WhenNoOtherMetadataProviderRegistered()
+    {
+        await using var host = new FunctionMetadataTestHost(b =>
+        {
+            b.UseDisabledWhen();
+            b.ConfigureServices((_, services) =>
+            {
+                var defaultProviders = services
+                    .Where(d => d.ServiceType == typeof(IFunctionMetadataProvider) &&
+                                d.ImplementationType?.Name.Contains("DisabledWhen") != true)
+                    .ToList();
+
+                foreach (var d in defaultProviders)
+                {
+                    services.Remove(d);
+                }
+            });
+        });
+
+        await host.StartAsync();
+
+        await Assert.That(async () => await host.GetFunctionMetadataAsync()).ThrowsExactly<InvalidOperationException>();
     }
 }

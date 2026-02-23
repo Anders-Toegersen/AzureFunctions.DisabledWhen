@@ -100,7 +100,8 @@ internal static class Emitter
                     {
                         var functionMetadataProvider = this.serviceProvider
                             .GetServices<IFunctionMetadataProvider>()
-                            .Last(x => x.GetType() != typeof(GeneratedDisabledWhenMetadataProvider));
+                            .LastOrDefault(x => x.GetType() != typeof(GeneratedDisabledWhenMetadataProvider))
+                            ?? throw new global::System.InvalidOperationException("No other IFunctionMetadataProvider is registered. Ensure the default Azure Functions metadata provider is available before calling UseDisabledWhen().");
 
                         var metaData = await functionMetadataProvider
                             .GetFunctionMetadataAsync(directory)
@@ -145,10 +146,16 @@ internal static class Emitter
                 {
             {{interceptorMethods}}
                     private static IHostBuilder UseDisabledWhenGenerated(this IHostBuilder builder)
-                        => builder.ConfigureServices(services => services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>());
+                    {
+                        global::System.ArgumentNullException.ThrowIfNull(builder);
+                        return builder.ConfigureServices(services => services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>());
+                    }
 
                     private static void UseDisabledWhenGenerated(this IFunctionsWorkerApplicationBuilder builder)
-                        => builder.Services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>();
+                    {
+                        global::System.ArgumentNullException.ThrowIfNull(builder);
+                        builder.Services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>();
+                    }
                 }
             }
             """;
