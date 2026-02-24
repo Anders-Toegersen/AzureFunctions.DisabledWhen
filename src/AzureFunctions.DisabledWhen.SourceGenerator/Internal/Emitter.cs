@@ -25,12 +25,13 @@ internal static class Emitter
             using Microsoft.Azure.Functions.Worker.Core.FunctionMetadata;
             using Microsoft.Extensions.Configuration;
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Azure.Functions.Worker;
             using Microsoft.Extensions.Hosting;
             using Microsoft.Extensions.Logging;
 
             namespace System.Runtime.CompilerServices
             {
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = true)]
                 file sealed class InterceptsLocationAttribute : global::System.Attribute
                 {
@@ -40,7 +41,7 @@ internal static class Emitter
 
             namespace AzureFunctions.DisabledWhen
             {
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file readonly struct DisabledCondition
                 {
                     public DisabledCondition(string configKey, string? configValue, global::System.StringComparison comparer, bool matchNullOrEmpty = false)
@@ -57,7 +58,7 @@ internal static class Emitter
                     public bool MatchNullOrEmpty { get; }
                 }
 
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file static class DisabledWhenRegistry
                 {
                     private static readonly global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<DisabledCondition>> Conditions =
@@ -78,7 +79,7 @@ internal static class Emitter
                     }
                 }
 
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file sealed class GeneratedDisabledWhenMetadataProvider : IFunctionMetadataProvider
                 {
                     private readonly IServiceProvider serviceProvider;
@@ -99,7 +100,8 @@ internal static class Emitter
                     {
                         var functionMetadataProvider = this.serviceProvider
                             .GetServices<IFunctionMetadataProvider>()
-                            .Last(x => x.GetType() != typeof(GeneratedDisabledWhenMetadataProvider));
+                            .LastOrDefault(x => x.GetType() != typeof(GeneratedDisabledWhenMetadataProvider))
+                            ?? throw new global::System.InvalidOperationException("No other IFunctionMetadataProvider is registered. Ensure the default Azure Functions metadata provider is available before calling UseDisabledWhen().");
 
                         var metaData = await functionMetadataProvider
                             .GetFunctionMetadataAsync(directory)
@@ -139,12 +141,21 @@ internal static class Emitter
                     }
                 }
 
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.0")]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("AzureFunctions.DisabledWhen.SourceGenerator", "1.0.1")]
                 file static class UseDisabledWhenInterceptor
                 {
             {{interceptorMethods}}
                     private static IHostBuilder UseDisabledWhenGenerated(this IHostBuilder builder)
-                        => builder.ConfigureServices(services => services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>());
+                    {
+                        global::System.ArgumentNullException.ThrowIfNull(builder);
+                        return builder.ConfigureServices(services => services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>());
+                    }
+
+                    private static void UseDisabledWhenGenerated(this IFunctionsWorkerApplicationBuilder builder)
+                    {
+                        global::System.ArgumentNullException.ThrowIfNull(builder);
+                        builder.Services.AddSingleton<IFunctionMetadataProvider, GeneratedDisabledWhenMetadataProvider>();
+                    }
                 }
             }
             """;
@@ -164,12 +175,24 @@ internal static class Emitter
 
         foreach (var interceptor in interceptors.Distinct())
         {
-            sb.AppendLine($$"""
+            if (interceptor.BuilderType == BuilderType.FunctionsWorkerApplicationBuilder)
+            {
+                sb.AppendLine($$"""
+                        [global::System.Runtime.CompilerServices.InterceptsLocation({{interceptor.Version}}, "{{interceptor.Data}}")]
+                        public static void UseDisabledWhen_{{index}}(this IFunctionsWorkerApplicationBuilder builder)
+                            => builder.UseDisabledWhenGenerated();
+
+            """);
+            }
+            else
+            {
+                sb.AppendLine($$"""
                         [global::System.Runtime.CompilerServices.InterceptsLocation({{interceptor.Version}}, "{{interceptor.Data}}")]
                         public static IHostBuilder UseDisabledWhen_{{index}}(this IHostBuilder builder)
                             => builder.UseDisabledWhenGenerated();
 
             """);
+            }
             index++;
         }
 

@@ -27,7 +27,8 @@ internal sealed class DisabledWhenMetadataProvider : IFunctionMetadataProvider
     {
         var functionMetadataProvider = serviceProvider
             .GetServices<IFunctionMetadataProvider>()
-            .Last(x => x.GetType() != typeof(DisabledWhenMetadataProvider));
+            .LastOrDefault(x => x.GetType() != typeof(DisabledWhenMetadataProvider))
+            ?? throw new InvalidOperationException("No other IFunctionMetadataProvider is registered. Ensure the default Azure Functions metadata provider is available before calling UseDisabledWhen().");
 
         var metaData = await functionMetadataProvider
             .GetFunctionMetadataAsync(directory)

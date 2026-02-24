@@ -7,10 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AzureFunctions.DisabledWhen\AzureFunctions.DisabledWhen.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="AzureFunctions.DisabledWhen" Version="1.0.1-prerelease" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.51.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.1.0" />

@@ -13,6 +13,7 @@ public sealed class DisabledWhenGenerator : IIncrementalGenerator
     private const string DisabledWhenLocalAttributeName = "AzureFunctions.DisabledWhen.DisabledWhenLocalAttribute";
     private const string DisabledWhenNullOrEmptyAttributeName = "AzureFunctions.DisabledWhen.DisabledWhenNullOrEmptyAttribute";
     private const string UseDisabledWhenMethodName = "AzureFunctions.DisabledWhen.IHostBuilderExtensions.UseDisabledWhen";
+    private const string UseDisabledWhenAppBuilderMethodName = "AzureFunctions.DisabledWhen.IFunctionsWorkerApplicationBuilderExtensions.UseDisabledWhen";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -99,7 +100,17 @@ public sealed class DisabledWhenGenerator : IIncrementalGenerator
         }
 
         var fullName = $"{methodSymbol.ContainingType.ToDisplayString()}.{methodSymbol.Name}";
-        if (fullName != UseDisabledWhenMethodName)
+
+        BuilderType builderType;
+        if (fullName == UseDisabledWhenMethodName)
+        {
+            builderType = BuilderType.HostBuilder;
+        }
+        else if (fullName == UseDisabledWhenAppBuilderMethodName)
+        {
+            builderType = BuilderType.FunctionsWorkerApplicationBuilder;
+        }
+        else
         {
             return null;
         }
@@ -112,7 +123,7 @@ public sealed class DisabledWhenGenerator : IIncrementalGenerator
             return null;
         }
 
-        return new InterceptorInfo(interceptableLocation.Version, interceptableLocation.Data);
+        return new InterceptorInfo(interceptableLocation.Version, interceptableLocation.Data, builderType);
     }
 
     private static FunctionDisableInfo? ExtractDisabledWhenInfo(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)

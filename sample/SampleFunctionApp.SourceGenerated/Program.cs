@@ -1,11 +1,11 @@
 using AzureFunctions.DisabledWhen;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication()
-    .UseDisabledWhen()
-    .ConfigureLogging(logging => logging.AddConsole())
-    .Build();
+var builder = FunctionsApplication.CreateBuilder(args);
+builder.UseDisabledWhen();
+builder.ConfigureLogging(logging => logging.AddConsole());
 
+var host = builder.Build();
 host.Run();
